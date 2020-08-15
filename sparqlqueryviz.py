@@ -25,8 +25,8 @@ def get_values(alg, vals):
 
 
 def find_triples(alg, vals):
-    # TODO: draw different subqueries separately
-    #print(type(alg))
+    # TODO: parse based on name attribute of the current parse tree node (alg)
+    # print(type(alg))
     result = []
     if isinstance(alg, list):
         akg = alg
@@ -36,8 +36,8 @@ def find_triples(alg, vals):
     for al in akg:
         # pprint.pprint(al)
         if hasattr(al, 'name'):
-            #print(al.name)
-            #pprint.pprint(al)
+            # print(al.name)
+            # pprint.pprint(al)
             pass
         ak = dict(al).keys()
         for key in ak:
@@ -48,8 +48,8 @@ def find_triples(alg, vals):
                 get_values(al[key], vals)
                 continue
             elif key == 'value':
-                #pprint.pprint(al)
-                #print(al[key])
+                # pprint.pprint(al)
+                # print(al[key])
                 for var in al['var']:
                     vals[str(var)] = []
                 for value in al[key]:
@@ -62,7 +62,7 @@ def find_triples(alg, vals):
                 continue
             elif key == 'term':
                 #print(type(al), al.name)
-                #print(al)
+                # print(al)
                 continue
             elif key == 'triples':
                 # yield alg.triples
@@ -142,6 +142,11 @@ if __name__ == "__main__":
         default='dot',
         choices=['dot', 'neato', 'circo', 'fdp', 'sfdp', 'twopi'])
 
+    parser.add_argument(
+        '-colorscheme', default='accent8',
+        help="default graphviz color scheme"
+    )
+
     args = parser.parse_args()
 
     if not path.exists(args.infile):
@@ -177,8 +182,8 @@ if __name__ == "__main__":
     pq = prepareQuery(
         q, initNs=NS)
 
-    #pprint.pprint(pq.algebra)
-    #print(prettify_parsetree(pq.algebra))
+    # pprint.pprint(pq.algebra)
+    # print(prettify_parsetree(pq.algebra))
 
     for prefix, nsURI in [n for n in pq.prologue.namespace_manager.namespaces()]:
         if prefix not in NS:
@@ -188,13 +193,13 @@ if __name__ == "__main__":
         pprint.pprint(pq.algebra)
 
     G = pgv.AGraph(directed=True)
-    G.node_attr.update(colorscheme='accent8')
-    G.edge_attr.update(colorscheme='accent8')
+    G.node_attr.update(colorscheme=args.colorscheme)
+    G.edge_attr.update(colorscheme=args.colorscheme)
 
     values = {}
     tris = find_triples(pq.algebra, values)
-    #pprint.pprint(tris)
-    #exit()
+    # pprint.pprint(tris)
+    # exit()
     if tris is not None:
         for gid, trisgrp in enumerate(tris):
             for s, p, o in trisgrp:
@@ -216,6 +221,7 @@ if __name__ == "__main__":
                 if 'color' not in dict(edge.attr).keys():
                     edge.attr['color'] = gid+1
                 edge.attr['label'] = pname
+                
                 if isinstance(p, Variable):
                     edge.attr['style'] = 'dashed'
 
