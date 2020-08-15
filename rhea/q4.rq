@@ -1,0 +1,21 @@
+#endpoint:https://sparql.rhea-db.org/sparql
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX ch:<http://purl.obolibrary.org/obo/>
+PREFIX ch3:<http://purl.obolibrary.org/obo/chebi/>
+PREFIX up:<http://purl.uniprot.org/core/>
+
+SELECT distinct ?chebi ?chebiUniprotName ?reaction ?reactionEquation
+WHERE {
+    ?reaction rdfs:subClassOf rh:Reaction .
+    ?reaction rh:status ?status .
+    VALUES (?status) {(rh:Approved) (rh:Preliminary)}
+    ?reaction rh:equation ?reactionEquation .
+    ?reaction rh:side ?reactionSide .
+    ?reactionSide rh:contains ?participant .
+    ?participant rh:compound ?compound .
+    ?compound rh:chebi ?chebi .
+    ?chebi up:name ?chebiUniprotName .
+    ?chebi ch3:inchikey ?inchikey .
+    VALUES (?inchikey) {("HVYWMOMLDIMFJA-DPAQBDIFSA-N")}
+}
+ORDER BY ?reaction

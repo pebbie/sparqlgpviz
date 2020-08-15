@@ -1,0 +1,24 @@
+#endpoint: https://sparql.uniprot.org/sparql/
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX up:<http://purl.uniprot.org/core/>
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
+PREFIX ch:<http://purl.obolibrary.org/obo/>
+PREFIX GO:<http://purl.obolibrary.org/obo/GO>
+SELECT distinct ?upProteinId ?goId ?rhReaction ?upPathway
+WHERE{
+    ?upProtein up:reviewed true .
+    ?upProtein up:mnemonic ?upProteinId .
+    # HELPY proteins (taxid=85962)
+
+    ?upProtein up:organism taxon:85962 .
+    ?upProtein up:annotation/up:catalyticActivity/up:catalyzedReaction ?rhReaction .
+    ?upProtein up:classifiedWith ?goId .
+    VALUES ?goId {GO:0000162} # GO: tryptophan biosynthesis
+    OPTIONAL {
+        ?upProtein up:annotation ?pa . # Pathway annotation
+        ?pa a up:Pathway_Annotation .
+        ?pa rdfs:seeAlso/rdfs:label ?upPathway . 
+    }
+}
+ORDER BY ?upPathway

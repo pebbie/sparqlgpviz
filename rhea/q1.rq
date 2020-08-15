@@ -1,0 +1,11 @@
+#endpoint: https://sparql.rhea-db.org/sparql
+PREFIX rh:<http://rdf.rhea-db.org/>
+
+SELECT ?reaction ?reactionEquation
+WHERE {
+VALUES ?status { rh:Approved rh:Preliminary }
+    ?reaction rdfs:subClassOf rh:Reaction .
+    ?reaction rh:status ?status .    
+    ?reaction rh:equation ?reactionEquation .
+}
+ORDER BY ?reaction

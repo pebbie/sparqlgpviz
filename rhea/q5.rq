@@ -1,0 +1,21 @@
+#endpoint:https://sparql.rhea-db.org/sparql
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX ch:<http://purl.obolibrary.org/obo/>
+PREFIX ec:<http://purl.uniprot.org/enzyme/>
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?ecClass
+?ecClassName
+(count(?reaction) as ?reactionCount)
+WHERE
+{
+    SERVICE <http://sparql.uniprot.org/sparql> {
+        ?ec rdfs:subClassOf ?ecClass .
+        ?ecClass skos:prefLabel ?ecClassName .
+        VALUES (?ecClass) { (ec:1.-.-.-) (ec:2.-.-.-)(ec:3.-.-.-)
+        (ec:4.-.-.-)(ec:5.-.-.-) (ec:6.-.-.-)
+        (ec:7.-.-.-) }
+    }
+    ?reaction rh:ec ?ec .
+}
+ORDER BY ?ecClass

@@ -1,0 +1,16 @@
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX ch:<http://purl.obolibrary.org/obo/>
+SELECT ?reaction
+WHERE {
+	?reaction rdfs:subClassOf rh:Reaction .
+	?reaction rh:status rh:Approved .
+	?reaction rh:side ?reactionSide1 .
+	?reactionSide1 rh:contains ?participant1 .
+	?participant1 rh:compound ?compound1 .
+	?compound1 rh:chebi ch:CHEBI_29985 .
+	?reaction rh:side ?reactionSide2 .
+	?reactionSide2 rh:contains ?participant2 .
+	?participant2 rh:compound ?compound2 .
+	?compound2 rh:chebi ch:CHEBI_58359 .
+	?reactionSide1 rh:transformableTo ?reactionSide2 .
+}

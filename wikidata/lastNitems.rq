@@ -1,0 +1,56 @@
+SELECT ?item ?countryLabel ?lbl ?time ?num
+WHERE {
+  # begin subquery
+  {
+     SELECT ?item ?countryLabel ?lbl ?time ?num (COUNT(?time2) as ?next_count)
+     WHERE {
+      # change the wd:Q252 with other country
+      # VALUES(?country){(wd:Q252)}
+  
+      ?item wdt:P31 wd:Q3241045.
+      ?item p:P31/pq:P642 wd:Q84263196.
+      ?item wdt:P17 ?country.
+      ?item wdt:P276/wdt:P31 wd:Q6256.
+  
+      # get our main observation data point
+      #{
+      #  ?item p:P1120 [ 
+      #    ps:P1120 ?num;
+      #    pq:P585 ?time
+      #  ].
+      #  BIND("num of deaths" as ?lbl)
+      #}
+      #UNION
+      #{  
+        BIND("num of cases" as ?lbl)
+        ?item p:P1603 [
+          ps:P1603 ?num; 
+          pq:P585 ?time
+        ].
+      #}
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  
+      # find later observations
+      OPTIONAL 
+      {
+        #{
+          ?item p:P1603 [ pq:P585 ?time2 ] .
+        #}
+        #UNION
+        #{
+        #  ?item p:P1120 [ pq:P585 ?time2 ] .
+        #}
+      }
+      FILTER( ?time2 > ?time )
+       
+      
+    }
+    GROUP BY ?item ?countryLabel ?lbl ?time ?num
+    #ORDER BY ASC(?lbl) DESC(?time)
+  }
+  #end subquery
+
+  # parameterize this number (note that ?next_count will likely to be a multiple of 2 when using multiple series (e.g. also include number of death))
+  FILTER(?next_count < 3)
+}
+ORDER BY ASC(?countryLabel) ASC(?lbl) DESC(?time)

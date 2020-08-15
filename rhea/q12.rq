@@ -1,0 +1,32 @@
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX up:<http://purl.uniprot.org/core/>
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
+PREFIX mnx:<https://rdf.metanetx.org/schema/>
+PREFIX mnet:<https://rdf.metanetx.org/mnet/>
+PREFIX GO:<http://purl.obolibrary.org/obo/GO_>
+
+SELECT distinct ?upPathway ?upProteinId ?rhReaction
+?mnxr ?cplx_label ?mnet
+WHERE{
+?upProtein up:reviewed true .
+?upProtein up:mnemonic ?upProteinId .
+?upProtein up:organism taxon:85962 .
+?upProtein up:classifiedWith GO:0000162.
+?upProtein up:annotation/up:catalyticActivity/up:catalyzedReaction ?rhReaction.
+# Pathway annotation
+OPTIONAL {?upProtein up:annotation ?pa.
+?pa a up:Pathway_Annotation;
+rdfs:seeAlso/rdfs:label ?upPathway . }
+    SERVICE <https://rdf.metanetx.org/sparql> {
+        ?mnxr mnx:reacXref ?rhReaction .
+        ?reac mnx:mnxr ?mnxr .
+        ?gpr mnx:reac ?reac .
+        ?gpr mnx:cata ?cata .
+        ?cata mnx:cplx ?cplx .
+        ?cplx rdfs:label ?cplx_label .
+        ?mnet mnx:gpr ?gpr .
+        VALUES ?mnet {mnet:seed_Opt85962_1}
+    }
+}
+ORDER BY ?upPathway

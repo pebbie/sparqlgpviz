@@ -1,0 +1,22 @@
+#endpoint: https://sparql.uniprot.org/sparql/
+PREFIX up:<http://purl.uniprot.org/core/>
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
+PREFIX ch:<http://purl.obolibrary.org/obo/>
+
+ASK {
+    SERVICE <https://sparql.rhea-db.org/sparql> {
+        ?reaction rh:status ?status .
+        VALUES (?status) {(rh:Approved) (rh:Preliminary)}
+        ?reaction rh:side ?reactionSide .
+        ?reactionSide rh:contains ?participant .
+        ?participant rh:compound ?compound .
+        # cholesterol: CHEBI:16113
+        ?compound rh:chebi ch:CHEBI_16113 .
+    }
+    ?protein up:annotation/up:catalyticActivity/up:catalyzedReaction ?reaction .
+    # Fungi (taxon:4751), kingdom
+    ?protein up:organism ?taxid .
+    ?taxid rdfs:subClassOf taxon:4751 .
+    ?protein up:reviewed true .
+}

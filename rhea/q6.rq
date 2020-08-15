@@ -1,0 +1,30 @@
+#endpoint:https://sparql.rhea-db.org/sparql
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
+PREFIX rh: <http://rdf.rhea-db.org/>
+PREFIX ch:<http://purl.obolibrary.org/obo/>
+
+SELECT DISTINCT ?protein ?proteinId ?proteinName
+?reaction ?reactionEquation
+WHERE {
+    ?reaction rdfs:subClassOf rh:Reaction .
+    ?reaction rh:side ?reactionSide .
+    ?reactionSide rh:contains ?participant .
+    ?participant rh:compound ?compound .
+    # cholesterol (CHEBI:16113)
+    ?compound rh:chebi ch:CHEBI_16113 .
+    ?reaction rh:equation ?reactionEquation .
+    
+    SERVICE <https://sparql.uniprot.org/sparql/> {
+        ?protein up:mnemonic ?proteinId .
+        ?protein up:recommendedName ?rn .
+        ?rn up:fullName ?proteinName .
+        # HUMAN proteins (taxid=9606)
+        ?protein up:organism taxon:9606 .
+        ?protein up:annotation ?a1 .
+        ?a1 a up:Catalytic_Activity_Annotation .
+        ?a1 up:catalyticActivity ?ca .
+        ?ca up:catalyzedReaction ?reaction .
+    }
+}

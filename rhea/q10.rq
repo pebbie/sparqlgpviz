@@ -1,0 +1,25 @@
+#endpoint: https://sparql.rhea-db.org/sparql
+PREFIX rh:<http://rdf.rhea-db.org/>
+PREFIX up:<http://purl.uniprot.org/core/>
+PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
+SELECT ?protein ?proteinId
+?reaction ?reactionSide
+?compound ?chebi
+?reactionEquation
+WHERE {
+    SERVICE <http://sparql.uniprot.org/sparql> {
+        ?protein up:reviewed ?status .
+        # Filter by NCBI taxid (H. pylori == 85962)
+        ?protein up:organism taxon:85962 .
+        ?protein up:mnemonic ?proteinId .
+        # Rhea reactions catalyzed by UniProt proteins
+        ?protein up:annotation ?a .
+        ?a up:catalyticActivity ?ca .
+        ?ca up:catalyzedReaction ?reaction .
+    }
+    ?reaction rh:equation ?reactionEquation .
+    ?reaction rh:side ?reactionSide .
+    ?reactionSide rh:contains ?participant .
+    ?participant rh:compound ?compound .
+    OPTIONAL {?compound rh:chebi ?chebi } .
+}
