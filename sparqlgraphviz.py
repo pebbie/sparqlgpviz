@@ -207,17 +207,15 @@ def to_AGraph(q, NS=dict(defaultNS), args=defaultArgs()):
     return G
 
 
-def cmdline(args):
-    # parse query file
-    print(f"opening {args.infile}...")
-    with open(args.infile) as fq:
+def load_query(queryfile, nsfiles=[]):
+    with open(queryfile) as fq:
         q = fq.read()
 
     # initialize default NS
     NS = defaultNS.copy()
 
     # parse NS prefixes
-    for nsdef in args.ns:
+    for nsdef in nsfiles:
         if path.exists(nsdef):
             with open(nsdef) as fns:
                 for line in fns:
@@ -231,6 +229,14 @@ def cmdline(args):
             prefix, nsURI = tuple(nsdef.strip().split('='))
             if prefix not in NS:
                 NS[prefix] = nsURI
+
+    return q, NS
+
+
+def cmdline(args):
+    # parse query file
+    print(f"opening {args.infile}...")
+    q, NS = load_query(args.infile, args.ns)
 
     G = to_AGraph(q, NS, args)
 
