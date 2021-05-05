@@ -7,12 +7,13 @@ from rdflib.plugins.sparql.parserutils import prettify_parsetree
 from rdflib.plugins.sparql import prepareQuery
 from rdflib.paths import Path
 import pprint
-import pygraphviz as pgv
 import argparse
 
 BLANKNODES = []
 defaultNS = {"rdf": str(RDF), "rdfs": str(
     RDFS), "owl": str(OWL), "xsd": str(XSD)}
+defaultColors = ['#1f77b3', '#ff7e0e', '#2ba02b', '#d62628', '#9367bc', '#8c564b', '#e277c1',
+                 '#7e7e7e', '#bcbc21', '#16bdcf', '#3a0182', '#004201', '#0fffa8', '#5d003f', '#bcbcff', '#d8afa1']
 
 
 def get_values(alg, vals):
@@ -132,6 +133,11 @@ def defaultArgs():
 
 
 def to_AGraph(q, NS=dict(defaultNS), args=defaultArgs()):
+    try:
+        import pygraphviz as pgv
+    except:
+        return None
+
     # TODO: remove args dependency
     pq = prepareQuery(
         q, initNs=NS)
@@ -204,6 +210,105 @@ def to_AGraph(q, NS=dict(defaultNS), args=defaultArgs()):
                 edge.attr['dir'] = 'none'
 
     G.layout(prog=args.layout)
+    return G
+
+
+def to_networkx(q, NS=dict(defaultNS), args=defaultArgs()):
+    def _get_node_attr(term, termlabel):
+        n = {}
+        n['shape'] = 'ellipse'
+        if isinstance(term, Variable):
+            n['style'] = 'dashed'
+        elif isinstance(term, BNode):
+            n['style'] = 'dotted'
+        elif isinstance(term, Literal):
+            n['shape'] = 'box'
+        if 'style' in n:
+            if n['style'] == 'dashed':
+                n['shapeProperties'] = {'borderDashes': [5, 5]}
+            elif n['style'] == 'dotted':
+                n['shapeProperties'] = {'borderDashes': [2, 2]}
+
+        return n
+
+    try:
+        import networkx as nx
+    except:
+        return None
+
+    # TODO: remove args dependency
+    pq = prepareQuery(
+        q, initNs=NS)
+
+    # pprint.pprint(pq.algebra)
+    # print(prettify_parsetree(pq.algebra))
+
+    for prefix, nsURI in [n for n in pq.prologue.namespace_manager.namespaces()]:
+        if prefix not in NS:
+            NS[prefix] = str(nsURI)
+
+    if args.verbose:
+        pprint.pprint(pq.algebra)
+
+    G = nx.MultiDiGraph(directed=True)
+
+    values = {}
+    tris = find_triples(pq.algebra, values)
+
+    if tris is not None:
+        for gid, trisgrp in enumerate(tris):
+            for s, p, o in trisgrp:
+                if args.verbose:
+                    print(repr(s), repr(p), repr(o))
+                    if not isinstance(p, URIRef):
+                        print(type(p))
+
+                # get term labels
+                sname = get_label(NS, s)
+                pname = get_label(NS, p)
+                oname = get_label(NS, o)
+
+                # customize edge attribute
+                edge_args = {}
+                edge_args['color'] = defaultColors[gid+1]
+                edge_args['label'] = pname
+                edge_args['arrows'] = {'to': {'enabled': True}}
+
+                if isinstance(p, Variable):
+                    edge_args['style'] = 'dashed'
+                    edge_args['dashes'] = [5, 5]
+
+                # customize node attribute
+                snode = _get_node_attr(s, sname)
+                onode = _get_node_attr(o, oname)
+
+                clr = {'border': defaultColors[gid+1], 'background': 'white'}
+
+                snode['color'] = clr
+                onode['color'] = clr
+
+                # add triple
+                G.add_node(sname, **snode)
+                G.add_node(oname, **onode)
+                G.add_edge(sname, oname, **edge_args)
+
+    if len(values.keys()) > 0:
+        for var in values:
+            lname = str(var)
+            varname = '?' + lname
+            for value in values[lname]:
+                valname = get_label(NS, value)
+
+                edge_attr = {}
+                edge_attr['style'] = 'dashed'
+                edge_args['dashes'] = [5, 5]
+                edge_attr['dir'] = 'none'
+                edge_attr['arrows'] = {'to': {'enabled': False}}
+
+                G.add_edge(valname, varname, **edge_attr)
+
+                G.nodes[valname]['shape'] = 'box'
+
     return G
 
 
