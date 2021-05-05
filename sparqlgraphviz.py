@@ -11,6 +11,8 @@ import pygraphviz as pgv
 import argparse
 
 BLANKNODES = []
+defaultNS = {"rdf": str(RDF), "rdfs": str(
+    RDFS), "owl": str(OWL), "xsd": str(XSD)}
 
 
 def get_values(alg, vals):
@@ -121,64 +123,16 @@ def set_node_attr(viz, term, termlabel):
     return n
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-infile', help="text file containing SPARQL query (.rq)", required=True)
-    parser.add_argument(
-        '-outfile', help="image file containing the visualized BGP (.png)")
-    parser.add_argument(
-        '-dot', action='store_true',
-        help="when set, additionally create the dot file")
-    parser.add_argument(
-        '-ns', nargs='*',
-        help="namespace prefix definition in the format of <prefix>=<prefixURI> or a filename of a text file containing this format for each line",
-        default=[])
-    parser.add_argument(
-        '-verbose', action='store_true',
-        help="print out intemediate debug info")
-    parser.add_argument(
-        '-layout', help="layout prog to pass on graphviz",
-        default='dot',
-        choices=['dot', 'neato', 'circo', 'fdp', 'sfdp', 'twopi'])
+def defaultArgs():
+    args = argparse.Namespace()
+    args.verbose = False
+    args.colorscheme = 'accent8'
+    args.layout = 'dot'
+    return args
 
-    parser.add_argument(
-        '-colorscheme', default='accent8',
-        help="default graphviz color scheme"
-    )
 
-    args = parser.parse_args()
-
-    if not path.exists(args.infile):
-        print(f"{args.infile} does not exists. exiting..")
-        sys.exit(1)
-
-    if args.outfile is None:
-        base, ext = path.splitext(args.infile)
-        args.outfile = base + '.png'
-
-    print(f"opening {args.infile}...")
-    with open(args.infile) as fq:
-        q = fq.read()
-
-    NS = {"rdf": str(RDF), "rdfs": str(
-        RDFS), "owl": str(OWL), "xsd": str(XSD)}
-
-    for nsdef in args.ns:
-        if path.exists(nsdef):
-            with open(nsdef) as fns:
-                for line in fns:
-                    if line.startswith('#'):
-                        # ignore comment
-                        continue
-                    prefix, nsURI = tuple(line.strip().split('='))
-                    if prefix not in NS:
-                        NS[prefix] = nsURI
-        else:
-            prefix, nsURI = tuple(nsdef.strip().split('='))
-            if prefix not in NS:
-                NS[prefix] = nsURI
-
+def to_AGraph(q, NS=dict(defaultNS), args=defaultArgs()):
+    # TODO: remove args dependency
     pq = prepareQuery(
         q, initNs=NS)
 
@@ -221,7 +175,7 @@ if __name__ == "__main__":
                 if 'color' not in dict(edge.attr).keys():
                     edge.attr['color'] = gid+1
                 edge.attr['label'] = pname
-                
+
                 if isinstance(p, Variable):
                     edge.attr['style'] = 'dashed'
 
@@ -250,6 +204,35 @@ if __name__ == "__main__":
                 edge.attr['dir'] = 'none'
 
     G.layout(prog=args.layout)
+    return G
+
+
+def cmdline(args):
+    # parse query file
+    print(f"opening {args.infile}...")
+    with open(args.infile) as fq:
+        q = fq.read()
+
+    # initialize default NS
+    NS = defaultNS.copy()
+
+    # parse NS prefixes
+    for nsdef in args.ns:
+        if path.exists(nsdef):
+            with open(nsdef) as fns:
+                for line in fns:
+                    if line.startswith('#'):
+                        # ignore comment
+                        continue
+                    prefix, nsURI = tuple(line.strip().split('='))
+                    if prefix not in NS:
+                        NS[prefix] = nsURI
+        else:
+            prefix, nsURI = tuple(nsdef.strip().split('='))
+            if prefix not in NS:
+                NS[prefix] = nsURI
+
+    G = to_AGraph(q, NS, args)
 
     if args.dot:
         base, ext = path.splitext(args.outfile)
@@ -259,3 +242,42 @@ if __name__ == "__main__":
 
     print(f"writing {args.outfile}...")
     G.draw(args.outfile)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-infile', help="text file containing SPARQL query (.rq)", required=True)
+    parser.add_argument(
+        '-outfile', help="image file containing the visualized BGP (.png)")
+    parser.add_argument(
+        '-dot', action='store_true',
+        help="when set, additionally create the dot file")
+    parser.add_argument(
+        '-ns', nargs='*',
+        help="namespace prefix definition in the format of <prefix>=<prefixURI> or a filename of a text file containing this format for each line",
+        default=[])
+    parser.add_argument(
+        '-verbose', action='store_true',
+        help="print out intemediate debug info")
+    parser.add_argument(
+        '-layout', help="layout prog to pass on graphviz",
+        default='dot',
+        choices=['dot', 'neato', 'circo', 'fdp', 'sfdp', 'twopi'])
+
+    parser.add_argument(
+        '-colorscheme', default='accent8',
+        help="default graphviz color scheme"
+    )
+
+    args = parser.parse_args()
+
+    if not path.exists(args.infile):
+        print(f"{args.infile} does not exists. exiting..")
+        sys.exit(1)
+
+    if args.outfile is None:
+        base, ext = path.splitext(args.infile)
+        args.outfile = base + '.png'
+
+    cmdline(args)
