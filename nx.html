@@ -1,0 +1,108 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "1", "height": "0.5", "id": "?reaction", "label": "?reaction", "pos": "242.34,105", "shape": "dot", "size": 10, "style": "dashed", "width": "1.4985"}, {"color": "1", "height": "0.5", "id": "rh:Reaction", "label": "rh:Reaction", "pos": "64.344,18", "shape": "dot", "size": 10, "width": "1.7873"}, {"color": "1", "height": "0.5", "id": "?reactionEquation", "label": "?reactionEquation", "pos": "242.34,18", "shape": "dot", "size": 10, "style": "dashed", "width": "2.6539"}, {"color": "1", "height": "0.5", "id": "?status", "label": "?status", "pos": "428.34,18", "shape": "dot", "size": 10, "style": "dashed", "width": "1.2277"}, {"height": "0.5", "id": "rh:Approved", "label": "rh:Approved", "pos": "428.34,105", "shape": "box", "size": 10, "width": "1.4583"}, {"height": "0.5", "id": "rh:Preliminary", "label": "rh:Preliminary", "pos": "559.34,105", "shape": "box", "size": 10, "width": "1.6806"}]);
+        edges = new vis.DataSet([{"color": "1", "from": "?reaction", "label": "rdfs:subClassOf", "lp": "181.34,61.5", "pos": "e,80.321,35.447 196.96,95.109 174.29,89.549 146.95,81.103 124.34,69 111.2,61.962 98.275,51.744 87.809,42.377", "to": "rh:Reaction", "weight": 1}, {"color": "1", "from": "?reaction", "label": "rh:equation", "lp": "283.84,61.5", "pos": "e,242.34,36.175 242.34,86.799 242.34,75.163 242.34,59.548 242.34,46.237", "to": "?reactionEquation", "weight": 1}, {"color": "1", "from": "?reaction", "label": "rh:status", "lp": "390.84,61.5", "pos": "e,401.71,32.609 275.66,90.665 291.16,84.32 309.79,76.496 326.34,69 348.58,58.931 373.15,46.913 392.6,37.183", "to": "?status", "weight": 1}, {"dir": "none", "from": "rh:Approved", "pos": "428.34,86.799 428.34,72.052 428.34,50.915 428.34,36.175", "style": "dashed", "to": "?status", "weight": 1}, {"dir": "none", "from": "rh:Preliminary", "pos": "532.83,86.799 508.76,71.179 473.64,48.39 450.89,33.627", "style": "dashed", "to": "?status", "weight": 1}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+	 
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>
