@@ -99,17 +99,19 @@ def get_label(NS, term):
             BLANKNODES.append(tname)
         tname = '_:bn' + str(BLANKNODES.index(tname)+1)
     elif isinstance(term, Path):
-        # print(term.n3())
+        tname = term.n3()
         if hasattr(term, 'arg'):
             aname = get_local_name(NS, str(term.arg))
             tname = tname.replace(str(term.arg), aname)
         elif hasattr(term, 'args'):
             for arg in term.args:
+                if isinstance(arg, Path):
+                    arg = arg.arg
+                tname = tname.replace('<'+str(arg)+'>', str(arg))
                 tname = tname.replace(str(arg), get_local_name(NS, arg))
         elif hasattr(term, 'path'):
             aname = get_local_name(NS, str(term.path))
             tname = tname.replace(str(term.path), aname)
-        tname = tname[5:-1]
     return tname
 
 
